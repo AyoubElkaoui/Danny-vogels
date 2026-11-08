@@ -4,6 +4,8 @@
 'use strict';
 
 const DEMO = new URLSearchParams(location.search).has('demo');
+// vanaf het beginscherm altijd de echte versie, ook als het icoon op de demo-pagina is aangemaakt
+if (DEMO && (navigator.standalone || (window.matchMedia && matchMedia('(display-mode: standalone)').matches))) location.replace('/');
 const LS_CACHE = DEMO ? 'dv_demo' : 'dv_cache';
 const HOME_DEFAULT = { name: 'Hilversum', country: 'NL', lat: 52.2292, lng: 5.1669 };
 
@@ -415,6 +417,7 @@ function renderStats() {
   const sp = new Set(state.sightings.map(s => s.sci)).size;
   const cc = new Set(state.sightings.map(s => s.country).filter(Boolean)).size;
   const n = state.sightings.length;
+  $('#demoBar').classList.toggle('hidden', !DEMO);
   $('#stats').textContent = n ? `${sp} ${sp === 1 ? 'soort' : 'soorten'} · ${n} ${n === 1 ? 'waarneming' : 'waarnemingen'} · ${cc} ${cc === 1 ? 'land' : 'landen'}` : 'Je vogelboekje is nog leeg';
 }
 
