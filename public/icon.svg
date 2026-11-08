@@ -1,8 +1,29 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" rx="112" fill="#24453a"/>
-  <circle cx="356" cy="150" r="58" fill="#e3a63f"/>
-  <path d="M96 330c38-6 70-22 96-48 30-30 52-74 96-86 34-9 66 4 84 28l40 4-34 22c-4 58-44 110-104 128-58 18-118 4-160-30l-18-18z" fill="#f4ecdc"/>
-  <path d="M200 300c40-6 84-30 112-66-4 50-44 94-96 104-22 4-42 2-60-4 16-8 30-20 44-34z" fill="#c9b796"/>
-  <circle cx="322" cy="214" r="9" fill="#1d2b25"/>
-  <path d="M212 380l-6 48M252 376l4 52" stroke="#e3a63f" stroke-width="12" stroke-linecap="round"/>
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1b1a2b"/>
+      <stop offset="0.6" stop-color="#3a1f26"/>
+      <stop offset="1" stop-color="#5a2a22"/>
+    </linearGradient>
+    <radialGradient id="sun" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#e86a4f"/>
+      <stop offset="1" stop-color="#c8452f"/>
+    </radialGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#sky)"/>
+  <circle cx="256" cy="236" r="150" fill="url(#sun)"/>
+  <!-- golven -->
+  <path d="M0 398 Q64 362 128 398 T256 398 T384 398 T512 398 V512 H0Z" fill="#141312" opacity=".55"/>
+  <path d="M0 430 Q64 398 128 430 T256 430 T384 430 T512 430 V512 H0Z" fill="#141312"/>
+  <g fill="#141312">
+    <!-- tak -->
+    <path d="M70 330 Q190 300 300 318 Q370 330 450 300 L454 312 Q372 346 298 334 Q190 318 74 344Z"/>
+    <path d="M360 326 Q392 296 412 262 L420 266 Q402 304 372 334Z"/>
+    <ellipse cx="418" cy="258" rx="16" ry="8" transform="rotate(-50 418 258)"/>
+    <ellipse cx="392" cy="292" rx="15" ry="7" transform="rotate(-20 392 292)"/>
+    <!-- vogel (zangvogel op de tak) -->
+    <path d="M168 300 Q150 246 186 206 Q214 176 250 176 Q262 150 290 146 Q318 144 330 166 L360 172 L332 182 Q336 214 316 246 Q292 288 238 304 L232 318 L222 318 L224 306 Q206 308 190 304 L170 340 L160 336Z"/>
+    <path d="M174 296 Q120 300 92 288 Q130 282 168 262Z"/>
+  </g>
+  <circle cx="303" cy="167" r="6" fill="#e86a4f"/>
 </svg>

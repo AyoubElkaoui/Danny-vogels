@@ -92,13 +92,13 @@ function normalizeState(d) {
   return s;
 }
 
-function setSync(cls, title) { const el = $('#sync'); el.className = 'sync ' + (cls || ''); el.title = title || ''; }
+function setSync(cls, title) { const el = $('#sync'); el.className = 'savestate ' + (cls || ''); el.textContent = DEMO ? '' : (title || ''); }
 
 function commit() {
   dirty = true;
   lsSet(LS_CACHE, { state, dirty, user });
   render();
-  if (DEMO) { dirty = false; return; }
+  if (DEMO) { dirty = false; setSync(); return; }
   clearTimeout(saveTimer);
   saveTimer = setTimeout(push, 500);
 }
@@ -392,11 +392,30 @@ function lifeList() {
   return [...m.values()];
 }
 
+// ---------- thema & kop (zelfde gedrag als planner en puzzels) ----------
+const COVER = n => `https://www.notion.so/images/page-cover/${n}.jpg`;
+const TAB_COVERS = { boek: 'woodcuts_1', soorten: 'woodcuts_2', buurt: 'woodcuts_3', kaart: 'woodcuts_5' };
+function applyTheme() {
+  const pref = state.settings?.theme || 'auto';
+  const h = new Date().getHours();
+  const light = pref === 'light' || (pref === 'auto' && h >= 7 && h < 19);
+  document.documentElement.dataset.theme = light ? 'light' : 'dark';
+  $('#themeBtn').textContent = { auto: 'Automatisch', light: 'Licht', dark: 'Donker' }[pref];
+  document.querySelector('meta[name=theme-color]').content = light ? '#f3eee3' : '#141312';
+}
+function renderHead() {
+  $('#todayLabel').textContent = new Intl.DateTimeFormat('nl-NL', { weekday: 'long', day: 'numeric', month: 'long' }).format(new Date()) + (DEMO ? ' · demo' : '');
+  $('#cover').style.setProperty('--cover', `url(${COVER(TAB_COVERS[tab] || 'woodcuts_1')})`);
+  const cs = $('#coverScene');
+  if (tab === 'boek') { if (!cs.firstChild) cs.innerHTML = coverScene(); cs.classList.add('on'); }
+  else cs.classList.remove('on');
+}
+
 function renderStats() {
   const sp = new Set(state.sightings.map(s => s.sci)).size;
   const cc = new Set(state.sightings.map(s => s.country).filter(Boolean)).size;
   const n = state.sightings.length;
-  $('#stats').textContent = n ? `${sp} ${sp === 1 ? 'soort' : 'soorten'} · ${n} ${n === 1 ? 'waarneming' : 'waarnemingen'} · ${cc} ${cc === 1 ? 'land' : 'landen'}` : 'Je vogelboekje';
+  $('#stats').textContent = n ? `${sp} ${sp === 1 ? 'soort' : 'soorten'} · ${n} ${n === 1 ? 'waarneming' : 'waarnemingen'} · ${cc} ${cc === 1 ? 'land' : 'landen'}` : 'Je vogelboekje is nog leeg';
 }
 
 const thumbHtml = (url, cls = 'thumb') => url
@@ -406,6 +425,7 @@ const thumbHtml = (url, cls = 'thumb') => url
 // ---------- weergaven ----------
 let boekQuery = '';
 function render() {
+  renderHead();
   renderStats();
   $$('#tabs [data-tab]').forEach(b => b.classList.toggle('on', b.dataset.tab === tab));
   const v = $('#view');
@@ -612,7 +632,7 @@ async function renderKaart(v) {
     if (!groups.has(k)) groups.set(k, []);
     groups.get(k).push(s);
   }
-  const color = getComputedStyle(document.documentElement).getPropertyValue('--moss').trim() || '#24453a';
+  const color = getComputedStyle(document.documentElement).getPropertyValue('--red').trim() || '#c8452f';
   const bounds = [];
   for (const items of groups.values()) {
     const s0 = items[0];
@@ -900,7 +920,8 @@ function openEditor(existing, preset = {}) {
     if (!existing) { tab = 'boek'; lsSet('dv_tab', tab); boekQuery = ''; }
     closeSheet(); commit();
     if (existing) toast('Opgeslagen');
-    else toast(wasNew ? `Nieuwe soort! ${rec.name} staat in je boekje` : `${rec.name} toegevoegd`, 'Nog een hier', () => openEditor(null, { keepPlace: { place: rec.place, country: rec.country, lat: rec.lat, lng: rec.lng } }));
+    if (!existing && wasNew) FX.burst(70);
+    if (!existing) toast(wasNew ? `Nieuwe soort! ${rec.name} staat in je boekje` : `${rec.name} toegevoegd`, 'Nog een hier', () => openEditor(null, { keepPlace: { place: rec.place, country: rec.country, lat: rec.lat, lng: rec.lng } }));
   }
 
   if (species) {
@@ -1051,10 +1072,18 @@ document.addEventListener('click', e => {
   const spc = t.closest('#view [data-species]');
   if (spc) { openSpecies(spc.dataset.species); return; }
   if (t.closest('#settingsBtn')) openSettings();
+  if (t.closest('#themeBtn')) {
+    const order = ['auto', 'light', 'dark'];
+    state.settings.theme = order[(order.indexOf(state.settings.theme || 'auto') + 1) % 3];
+    applyTheme();
+    commit();
+  }
 });
 
 // ---------- login & opstart ----------
 function showLogin() {
+  buildTokyo();
+  FX.setMode(34, season());
   $('#boot').classList.add('hidden');
   $('#app').classList.add('hidden');
   $('#lock').classList.remove('hidden');
@@ -1070,7 +1099,10 @@ $('#loginForm').addEventListener('submit', async e => {
     if (!r.ok) throw new Error(d.error || 'Inloggen mislukt');
     $('#lock').classList.add('hidden');
     await start();
-  } catch (x) { err.textContent = x.message; }
+  } catch (x) {
+    err.textContent = x.message;
+    $('.lock-box').classList.remove('shake'); void $('.lock-box').offsetWidth; $('.lock-box').classList.add('shake');
+  }
   btn.disabled = false;
 });
 
@@ -1130,9 +1162,28 @@ async function start() {
   $('#boot').classList.add('hidden');
   $('#lock').classList.add('hidden');
   $('#app').classList.remove('hidden');
+  applyTheme();
+  applyFx();
+  tokyoTick();
+  setSync(dirty ? 'busy' : '', dirty ? 'Opslaan…' : '');
   render();
   loadSpecies().then(() => { if (tab === 'buurt') render(); });
   hydratePhotos();
 }
+
+// nieuwe versie live gezet? eerst opslaan, dan vanzelf verversen (zoals de planner)
+const MY_VERSION = (document.querySelector('script[src*="app.js"]')?.getAttribute('src').match(/v=(\d+)/) || [])[1];
+async function checkVersion() {
+  if (DEMO || !MY_VERSION || document.hidden || !$('#sheet').classList.contains('hidden')) return;
+  try {
+    const html = await (await fetch('/', { cache: 'no-store' })).text();
+    const live = (html.match(/app\.js\?v=(\d+)/) || [])[1];
+    if (live && live !== MY_VERSION) { if (dirty) await push(); location.reload(); }
+  } catch { /* offline */ }
+}
+document.addEventListener('visibilitychange', checkVersion);
+setInterval(checkVersion, 10 * 60 * 1000);
+setInterval(() => { if (!$('#app').classList.contains('hidden')) { applyTheme(); renderHead(); } }, 60000);
+
 
 start();
