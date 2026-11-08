@@ -1,0 +1,6 @@
+.env*
+.data
+LOGIN.txt
+scripts
+DEV-LOGIN.txt
+showcase

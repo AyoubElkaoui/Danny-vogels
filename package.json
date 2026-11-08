@@ -1,0 +1,17 @@
+{
+  "name": "danny-vogels",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "set-login": "node scripts/set-login.mjs"
+  },
+  "engines": {
+    "node": "22.x"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "pg": "^8.13.1"
+  }
+}
